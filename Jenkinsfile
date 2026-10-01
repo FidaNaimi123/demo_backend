@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -34,12 +35,6 @@ pipeline {
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
-
-        stage('Test échec email') {
-            steps {
-                sh 'exit 1'
-            }
-        }
     }
 
     post {
@@ -55,5 +50,3 @@ pipeline {
         }
     }
 }
-
-
