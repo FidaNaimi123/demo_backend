@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'M2_HOME'   // doit correspondre au nom configuré dans Jenkins (Configuration globale des outils)
-        jdk 'JAVA_HOME'   // doit correspondre au nom configuré dans Jenkins
+        maven 'M2_HOME'
+        jdk 'JAVA_HOME'
     }
 
     stages {
@@ -34,6 +34,12 @@ pipeline {
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
+
+        stage('Test échec email') {
+            steps {
+                sh 'exit 1'
+            }
+        }
     }
 
     post {
@@ -43,8 +49,11 @@ pipeline {
                  subject: "ÉCHEC de la build Jenkins : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "La pipeline a échoué.\n\nConsultez les logs ici : ${env.BUILD_URL}"
         }
+
         success {
             echo 'Pipeline exécutée avec succès.'
         }
     }
 }
+
+
