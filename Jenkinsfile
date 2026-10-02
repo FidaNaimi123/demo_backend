@@ -29,6 +29,29 @@ pipeline {
             }
         }
 
+        stage('Analyse SonarQube') {
+            steps {
+                echo 'Analyse du code avec SonarQube...'
+
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                          -Dsonar.projectKey=demo-back
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                echo 'Vérification du Quality Gate SonarQube...'
+
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Archivage du livrable') {
             steps {
                 echo 'Archivage du fichier JAR...'
@@ -39,7 +62,20 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo 'Construction de l image Docker...'
-                sh 'docker build -t fadoucha/demo-backend:${BUILD_NUMBER} .'
+
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        docker build \
+                          -t "$DOCKER_USERNAME/demo-backend:${BUILD_NUMBER}" \
+                          .
+                    '''
+                }
             }
         }
 
@@ -55,14 +91,21 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        echo "$DOCKER_PASSWORD" | docker login \
+                          -u "$DOCKER_USERNAME" \
+                          --password-stdin
 
-                        docker push "$DOCKER_USERNAME/demo-backend:${BUILD_NUMBER}"
+                        docker push \
+                          "$DOCKER_USERNAME/demo-backend:${BUILD_NUMBER}"
 
-                        docker tag "$DOCKER_USERNAME/demo-backend:${BUILD_NUMBER}" \
-                                   "$DOCKER_USERNAME/demo-backend:latest"
+                        docker tag \
+                          "$DOCKER_USERNAME/demo-backend:${BUILD_NUMBER}" \
+                          "$DOCKER_USERNAME/demo-backend:latest"
 
-                        docker push "$DOCKER_USERNAME/demo-backend:latest"
+                        docker push \
+                          "$DOCKER_USERNAME/demo-backend:latest"
+
+                        docker logout
                     '''
                 }
             }
@@ -84,3 +127,5 @@ pipeline {
         }
     }
 }
+
+
