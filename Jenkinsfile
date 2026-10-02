@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -127,39 +128,5 @@ pipeline {
         }
     }
 }
-```
 
-Ensuite, **il faut pousser ce Jenkinsfile sur GitHub**, sinon Jenkins continuera d'utiliser l'ancienne version :
-
-```bash
-cd ~/Downloads/demo-backend
-
-git add Jenkinsfile
-git commit -m "Fix SonarQube Maven plugin"
-git push origin main
-```
-
-Puis dans Jenkins :
-
-**demo-backend → Build Now → Console Output**
-
-Tu dois maintenant voir :
-
-```text
-[Pipeline] { (Analyse SonarQube)
-```
-
-puis :
-
-```text
-INFO: EXECUTION SUCCESS
-```
-
-et ensuite :
-
-```text
-[Pipeline] { (Quality Gate)
-```
-
-Si le Quality Gate passe, les étapes **Archivage → Docker Build → Docker Push** seront exécutées.
 
